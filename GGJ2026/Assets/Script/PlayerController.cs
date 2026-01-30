@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(Rigidbody2D))]
-public class PlayerMovement : MonoBehaviour
+public class PlayerController : MonoBehaviour
 {
     [Header("移动参数")]
     [SerializeField] private float moveSpeed = 5f;
@@ -17,6 +17,8 @@ public class PlayerMovement : MonoBehaviour
     private PlayerControls playerControls;
     private Vector2 moveInput;
     private Vector2 currentVelocity;
+
+    public bool canMove = true;
 
     private void Awake()
     {

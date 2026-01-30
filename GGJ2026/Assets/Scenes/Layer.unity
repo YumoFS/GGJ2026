@@ -237,9 +237,6 @@ MonoBehaviour:
   enableLookAhead: 0
   lookAheadFactor: 0.5
   lookAheadSmooth: 5
-  velocity: {x: 0, y: 0, z: 0}
-  lookAheadPosition: {x: 0, y: 0, z: 0}
-  lastTargetPosition: {x: 0, y: 0, z: 0}
 --- !u!1 &1742419078
 GameObject:
   m_ObjectHideFlags: 0
@@ -277,22 +274,9 @@ MonoBehaviour:
   wanderRadius: 5
   wanderInterval: 3
   hunterSprite: {fileID: 0}
-  factionAColor:
-    r: 0.2
-    g: 0.6
-    b: 1
-    a: 1
-  factionBColor:
-    r: 1
-    g: 0.3
-    b: 0.2
-    a: 1
+  factionAColor: {r: 0.2, g: 0.6, b: 1, a: 1}
+  factionBColor: {r: 1, g: 0.3, b: 0.2, a: 1}
   detectionVisual: {fileID: 0}
-  player: {fileID: 0}
-  wanderCenter: {x: 0, y: 0}
-  wanderTimer: 0
-  targetPosition: {x: 0, y: 0}
-  currentState: 0
 --- !u!212 &1742419080
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -402,9 +386,6 @@ MonoBehaviour:
   gameOverPanel: {fileID: 0}
   gameOverText: {fileID: 0}
   maxMaskProgress: 100
-  maskProgressA: 0
-  maskProgressB: 0
-  player: {fileID: 0}
 --- !u!4 &1982594530
 Transform:
   m_ObjectHideFlags: 0
