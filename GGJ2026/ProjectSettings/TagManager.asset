@@ -15,7 +15,7 @@ TagManager:
   - Water
   - UI
   - Player
-  - 
+  - Faction
   - 
   - 
   - 
@@ -46,4 +46,7 @@ TagManager:
     locked: 0
   - name: Default
     uniqueID: 0
+    locked: 0
+  - name: Characters
+    uniqueID: 870722373
     locked: 0

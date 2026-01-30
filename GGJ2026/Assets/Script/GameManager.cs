@@ -89,6 +89,7 @@ public class GameManager : MonoBehaviour
     // 被追捕者抓住
     public void CaughtByHunter(Faction hunterFaction)
     {
+        // return;
         if (playerCurrentFaction != hunterFaction)
         {
             GameOver($"被{hunterFaction}的追捕者抓住！");
@@ -99,7 +100,8 @@ public class GameManager : MonoBehaviour
     {
         isGameOver = true;
         currentState = GameState.GameOver;
-        gameOverText.text = reason;
+        // gameOverText.text = reason;
+        Debug.Log("Game Over");
         gameOverPanel.SetActive(true);
         
         // 停止玩家输入
