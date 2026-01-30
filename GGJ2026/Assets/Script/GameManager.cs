@@ -23,8 +23,8 @@ public class GameManager : MonoBehaviour
     
     [Header("进度设置")]
     [SerializeField] private float maxMaskProgress = 100f;
-    private float maskProgressA = 0f;
-    private float maskProgressB = 0f;
+    public float maskProgressA = 0f;
+    public float maskProgressB = 0f;
     
     private PlayerController player;
     
@@ -58,7 +58,7 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         player = FindObjectOfType<PlayerController>();
-        UpdateUI();
+        // UpdateUI();
     }
     
     // 增加阵营进度
@@ -83,7 +83,7 @@ public class GameManager : MonoBehaviour
             }
         }
         
-        UpdateUI();
+        // UpdateUI();
     }
     
     // 被追捕者抓住
