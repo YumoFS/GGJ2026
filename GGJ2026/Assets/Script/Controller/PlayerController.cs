@@ -77,7 +77,11 @@ public class PlayerController : MonoBehaviour
     
     private void FixedUpdate()
     {
-        if (!canMove) return;
+        if (!canMove)
+        {
+            rb.velocity = Vector2.zero;
+            return;
+        }
         
         HandleMovement();
         CheckFactionZone();

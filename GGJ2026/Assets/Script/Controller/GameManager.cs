@@ -74,13 +74,24 @@ public class GameManager : MonoBehaviour
                 GameOver($"被{Faction.FactionA}完全同化！");
             }
         }
-        else if (faction == Faction.FactionB)
+        else
+        {
+            maskProgressA -= amount / 2;
+            if (maskProgressA < 0) maskProgressA = 0;
+        }
+        
+        if (faction == Faction.FactionB)
         {
             maskProgressB += amount;
             if (maskProgressB >= maxMaskProgress)
             {
                 GameOver($"被{Faction.FactionB}完全同化！");
             }
+        }
+        else
+        {
+            maskProgressB -= amount/2;
+            if (maskProgressB < 0) maskProgressB = 0;
         }
         
         // UpdateUI();
