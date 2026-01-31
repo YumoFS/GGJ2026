@@ -5,6 +5,7 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(Rigidbody2D), typeof(SpriteRenderer))]
 public class PlayerController : MonoBehaviour
 {
+    public static PlayerController Instance {get; private set;}
     [Header("移动设置")]
     [SerializeField] private float moveSpeed = 5f;
     [SerializeField] private float acceleration = 10f;
@@ -24,6 +25,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private Vector2 maxBounds = new Vector2(10f, 5f);
     
     public bool canMove = true;
+    public bool isWalking;
     private Rigidbody2D rb;
     private SpriteRenderer spriteRenderer;
     private Vector2 moveInput;
@@ -101,11 +103,13 @@ public class PlayerController : MonoBehaviour
         {
             currentVelocity = Vector2.Lerp(currentVelocity, targetVelocity, 
                 acceleration * Time.fixedDeltaTime);
+            isWalking = true;
         }
         else
         {
             currentVelocity = Vector2.Lerp(currentVelocity, Vector2.zero, 
                 deceleration * Time.fixedDeltaTime);
+            isWalking = false;
         }
         
         rb.velocity = currentVelocity;
