@@ -58,6 +58,10 @@ MonoBehaviour:
   randomMoveSpeed: 0.5
   randomTargetChangeInterval: 3
   targetReachThreshold: 0.2
+  returnSpeed: 2
+  returnThreshold: 0.1
+  returnCheckInterval: 1
+  outOfRangeDistance: 1
   radiusVariation: 0.5
   speedVariation: 5
   randomSpeedVariation: 0.5
@@ -65,6 +69,7 @@ MonoBehaviour:
   faceMovementDirection: 0
   orbitColor: {r: 0.51886785, g: 0.51886785, b: 1, a: 1}
   randomColor: {r: 1, g: 1, b: 1, a: 1}
+  returnColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
 --- !u!70 &7330610612530221656
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
@@ -112,7 +117,7 @@ Rigidbody2D:
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
-  m_Mass: 10
+  m_Mass: 1
   m_LinearDrag: 0
   m_AngularDrag: 0.05
   m_GravityScale: 0

@@ -1,4 +1,4 @@
-// SwitchedMovementController.cs - 可切换的轨道/随机移动
+// FactionMemberController.cs - 可切换的轨道/随机移动，带有返回原范围功能
 using UnityEngine;
 
 public class FactionMemberController : MonoBehaviour
@@ -7,13 +7,14 @@ public class FactionMemberController : MonoBehaviour
     {
         Orbit,      // 绕圈运动
         Random,     // 随机移动
-        Mixed       // 混合模式（根据时间或条件切换）
+        Mixed,      // 混合模式（根据时间或条件切换）
+        Returning   // 返回原范围模式（新增）
     }
     
     [Header("移动模式")]
     [SerializeField] private MovementMode currentMode = MovementMode.Orbit;
-    [SerializeField] private bool allowModeSwitching = true; // 允许运行时切换模式
-    [SerializeField] private float modeSwitchInterval = 10f; // 模式切换间隔（混合模式使用）
+    [SerializeField] private bool allowModeSwitching = true;
+    [SerializeField] private float modeSwitchInterval = 10f;
     
     [Header("轨道运动设置")]
     [SerializeField] private Transform orbitCenter;
@@ -22,10 +23,16 @@ public class FactionMemberController : MonoBehaviour
     [SerializeField] private bool clockwise = true;
     
     [Header("随机移动设置")]
-    [SerializeField] private float randomMoveRadius = 5f; // 随机移动范围半径
-    [SerializeField] private float randomMoveSpeed = 2f; // 随机移动速度
-    [SerializeField] private float randomTargetChangeInterval = 3f; // 目标点更换间隔
-    [SerializeField] private float targetReachThreshold = 0.2f; // 到达目标点的阈值
+    [SerializeField] private float randomMoveRadius = 5f;
+    [SerializeField] private float randomMoveSpeed = 2f;
+    [SerializeField] private float randomTargetChangeInterval = 3f;
+    [SerializeField] private float targetReachThreshold = 0.2f;
+    
+    [Header("返回原范围设置")]
+    [SerializeField] private float returnSpeed = 3f; // 返回原范围的速度
+    [SerializeField] private float returnThreshold = 0.1f; // 返回完成的阈值
+    [SerializeField] private float returnCheckInterval = 1f; // 检查是否需要返回的间隔
+    [SerializeField] private float outOfRangeDistance = 1.5f; // 超过此距离视为离开范围
     
     [Header("随机性设置")]
     [SerializeField] private float radiusVariation = 0.5f;
@@ -37,6 +44,7 @@ public class FactionMemberController : MonoBehaviour
     [SerializeField] private bool faceMovementDirection = false;
     [SerializeField] private Color orbitColor = Color.blue;
     [SerializeField] private Color randomColor = Color.green;
+    [SerializeField] private Color returnColor = Color.yellow; // 返回模式颜色
     
     // 轨道运动变量
     private float currentOrbitRadius;
@@ -50,44 +58,346 @@ public class FactionMemberController : MonoBehaviour
     private float randomMoveTimer;
     private float currentRandomSpeed;
     
+    // 返回原范围变量
+    private Vector2 originalRangeCenter; // 原始范围中心
+    private float originalRangeRadius;   // 原始范围半径
+    private Vector2 returnTarget;        // 返回目标位置
+    private float returnCheckTimer;      // 返回检查计时器
+    private bool isReturning = false;    // 是否正在返回
+    private MovementMode modeBeforeReturn; // 返回前的模式
+    
     // 通用变量
     private float modeSwitchTimer;
     private bool isInMixedMode = false;
+    
+    [Header("物理设置")]
+    [SerializeField] private bool usePhysics = true; // 是否使用物理
+    [SerializeField] private float physicsDamping = 0.8f; // 物理阻尼
+    [SerializeField] private float returnPhysicsSpeed = 2f; // 返回时的物理速度
+    
+    // 物理相关变量
+    private Vector2 collisionForce;
+    private float collisionForceTimer;
+    private bool isColliding = false;
+    // 物理相关
+    private Rigidbody2D rb;
+    private Vector2 lastFrameVelocity;
+    private float collisionForceThreshold = 2f; // 碰撞力阈值，超过此值视为被撞开
     
     private void Start()
     {
         InitializeMovement();
         
-        // 如果没有指定精灵渲染器，尝试获取
         if (spriteRenderer == null)
-        {
             spriteRenderer = GetComponent<SpriteRenderer>();
+            
+        // 初始化物理组件
+        InitializePhysics();
+        
+        RecordOriginalRange();
+        returnCheckTimer = returnCheckInterval;
+    }
+    
+    private void InitializePhysics()
+    {
+        // 获取或添加Rigidbody2D
+        rb = GetComponent<Rigidbody2D>();
+        if (rb == null)
+        {
+            rb = gameObject.AddComponent<Rigidbody2D>();
+            rb.bodyType = RigidbodyType2D.Dynamic;
+        }
+        
+        // 设置物理属性
+        rb.gravityScale = 0f; // 无重力
+        rb.drag = 5f; // 线性阻力
+        rb.angularDrag = 5f; // 角阻力
+        rb.constraints = RigidbodyConstraints2D.FreezeRotation; // 锁定旋转
+        
+        // 设置碰撞体
+        Collider2D col = GetComponent<Collider2D>();
+        if (col == null)
+        {
+            // 如果没有碰撞体，添加一个
+            BoxCollider2D boxCollider = gameObject.AddComponent<BoxCollider2D>();
+            boxCollider.size = new Vector2(1f, 1f);
         }
     }
     
     private void Update()
     {
-        // 更新模式切换计时器（混合模式）
+        // 更新模式切换计时器
         UpdateModeSwitching();
         
-        // 根据当前模式执行相应的移动
-        switch (currentMode)
+        // 检查是否需要返回原范围
+        CheckReturnToRange();
+        
+        // 如果不是返回模式，执行正常移动
+        if (currentMode != MovementMode.Returning)
         {
-            case MovementMode.Orbit:
-                UpdateOrbitMovement();
-                break;
-                
-            case MovementMode.Random:
-                UpdateRandomMovement();
-                break;
-                
-            case MovementMode.Mixed:
-                UpdateMixedMovement();
-                break;
+            switch (currentMode)
+            {
+                case MovementMode.Orbit:
+                    UpdateOrbitMovement();
+                    break;
+                    
+                case MovementMode.Random:
+                    UpdateRandomMovement();
+                    break;
+                    
+                case MovementMode.Mixed:
+                    UpdateMixedMovement();
+                    break;
+            }
         }
         
         // 更新视觉反馈
         UpdateVisualFeedback();
+        
+        // 更新碰撞力计时器
+        if (collisionForceTimer > 0)
+        {
+            collisionForceTimer -= Time.deltaTime;
+            if (collisionForceTimer <= 0)
+            {
+                collisionForce = Vector2.zero;
+                isColliding = false;
+            }
+        }
+    }
+    
+    private void FixedUpdate()
+    {
+        // 处理物理更新
+        HandlePhysics();
+        
+        // 如果在返回模式，使用物理方式返回
+        if (currentMode == MovementMode.Returning)
+        {
+            HandleReturnPhysics();
+        }
+    }
+    
+    private void HandlePhysics()
+    {
+        if (!usePhysics || rb == null) return;
+        
+        // 如果不是返回模式，限制速度避免飞得太远
+        if (currentMode != MovementMode.Returning)
+        {
+            // 限制最大速度
+            if (rb.velocity.magnitude > 5f)
+            {
+                rb.velocity = rb.velocity.normalized * 5f;
+            }
+            
+            // 应用阻尼
+            rb.velocity *= physicsDamping;
+            
+            // 如果速度很小，停止移动
+            if (rb.velocity.magnitude < 0.1f)
+            {
+                rb.velocity = Vector2.zero;
+            }
+        }
+    }
+    
+    private void HandleReturnPhysics()
+    {
+        if (!usePhysics || rb == null || !isReturning) return;
+        
+        // 计算返回方向
+        Vector2 directionToTarget = (returnTarget - (Vector2)transform.position).normalized;
+        
+        // 计算到目标的距离
+        float distanceToTarget = Vector2.Distance(transform.position, returnTarget);
+        
+        if (distanceToTarget > returnThreshold)
+        {
+            // 使用力或速度移动到目标
+            Vector2 desiredVelocity = directionToTarget * returnPhysicsSpeed;
+            
+            // 计算所需的力（基于当前速度）
+            Vector2 force = (desiredVelocity - rb.velocity) * 10f;
+            
+            // 应用力
+            rb.AddForce(force);
+            
+            // 限制最大速度
+            if (rb.velocity.magnitude > returnPhysicsSpeed * 1.5f)
+            {
+                rb.velocity = rb.velocity.normalized * returnPhysicsSpeed * 1.5f;
+            }
+            
+            // 更新朝向
+            if (faceMovementDirection && spriteRenderer != null)
+            {
+                spriteRenderer.flipX = directionToTarget.x < 0;
+            }
+        }
+        else
+        {
+            // 接近目标时减速
+            rb.velocity *= 0.9f;
+            
+            // 到达目标点
+            if (rb.velocity.magnitude < 0.5f && distanceToTarget < returnThreshold * 2f)
+            {
+                CompleteReturnToRange();
+            }
+        }
+    }
+    
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        // 检测是否被玩家撞开
+        if (collision.gameObject.CompareTag("Player"))
+        {
+            // 记录碰撞信息
+            isColliding = true;
+            collisionForce = collision.relativeVelocity;
+            collisionForceTimer = 0.5f; // 记录碰撞力0.5秒
+            
+            // 计算碰撞力大小
+            float collisionForceMagnitude = collisionForce.magnitude;
+            
+            if (collisionForceMagnitude > collisionForceThreshold)
+            {
+                // 被玩家撞开，标记需要返回原范围
+                StartReturnToRange();
+                
+                // 可以添加视觉效果
+                if (spriteRenderer != null)
+                {
+                    StartCoroutine(FlashEffect(0.5f));
+                }
+                
+                Debug.Log($"{gameObject.name} 被玩家撞开，碰撞力: {collisionForceMagnitude}");
+            }
+        }
+    }
+    
+    private void OnCollisionStay2D(Collision2D collision)
+    {
+        // 持续碰撞时也记录
+        if (collision.gameObject.CompareTag("Player"))
+        {
+            isColliding = true;
+            collisionForceTimer = 0.3f;
+        }
+    }
+    
+    private void OnCollisionExit2D(Collision2D collision)
+    {
+        // 碰撞结束
+        if (collision.gameObject.CompareTag("Player"))
+        {
+            isColliding = false;
+        }
+    }
+    
+    private void StartReturnToRange()
+    {
+        // 保存当前模式
+        modeBeforeReturn = currentMode;
+        
+        // 切换到返回模式
+        currentMode = MovementMode.Returning;
+        isReturning = true;
+        
+        // 清除当前的物理速度
+        if (rb != null)
+        {
+            rb.velocity = Vector2.zero;
+            rb.angularVelocity = 0f;
+        }
+        
+        // 计算返回目标（在原始范围的边缘）
+        Vector2 currentPos = transform.position;
+        Vector2 directionToCenter = (originalRangeCenter - currentPos).normalized;
+        
+        // 确保方向有效
+        if (directionToCenter.magnitude < 0.1f)
+        {
+            // 如果已经在中心，随机选择一个方向
+            directionToCenter = Random.insideUnitCircle.normalized;
+        }
+        
+        // 计算返回目标点（在原始范围的80%位置）
+        returnTarget = originalRangeCenter - directionToCenter * (originalRangeRadius * 0.8f);
+        
+        // 确保目标点在范围内
+        float distanceToCenter = Vector2.Distance(returnTarget, originalRangeCenter);
+        if (distanceToCenter > originalRangeRadius)
+        {
+            returnTarget = originalRangeCenter + (returnTarget - originalRangeCenter).normalized * originalRangeRadius;
+        }
+        
+        Debug.Log($"{gameObject.name} 开始返回原范围，目标: {returnTarget}");
+    }
+    
+    private void UpdateReturnMovement()
+    {
+        if (!isReturning) return;
+        
+        // 如果不是使用物理模式，直接移动
+        if (!usePhysics)
+        {
+            float distanceToTarget = Vector2.Distance(transform.position, returnTarget);
+            
+            if (distanceToTarget > returnThreshold)
+            {
+                // 直接向目标点移动
+                Vector2 moveDirection = (returnTarget - (Vector2)transform.position).normalized;
+                transform.position = Vector2.MoveTowards(
+                    transform.position, 
+                    returnTarget, 
+                    returnSpeed * Time.deltaTime
+                );
+                
+                // 更新朝向
+                if (faceMovementDirection && spriteRenderer != null)
+                {
+                    spriteRenderer.flipX = moveDirection.x < 0;
+                }
+            }
+            else
+            {
+                CompleteReturnToRange();
+            }
+        }
+    }
+    
+    private void CompleteReturnToRange()
+    {
+        // 返回完成，恢复原来的模式
+        isReturning = false;
+        currentMode = modeBeforeReturn;
+        
+        // 确保速度清零
+        if (rb != null)
+        {
+            rb.velocity = Vector2.zero;
+            rb.angularVelocity = 0f;
+        }
+        
+        // 根据恢复的模式重新初始化
+        switch (currentMode)
+        {
+            case MovementMode.Orbit:
+                InitializeOrbitMode();
+                break;
+                
+            case MovementMode.Random:
+                InitializeRandomMode();
+                break;
+                
+            case MovementMode.Mixed:
+                InitializeMixedMode();
+                break;
+        }
+        
+        Debug.Log($"{gameObject.name} 已返回原范围，恢复{modeBeforeReturn}模式");
     }
     
     private void InitializeMovement()
@@ -99,7 +409,7 @@ public class FactionMemberController : MonoBehaviour
         }
         else
         {
-            orbitCenterPos = transform.position; // 如果没有指定中心，使用当前位置
+            orbitCenterPos = transform.position;
         }
         
         currentOrbitRadius = orbitRadius + Random.Range(-radiusVariation, radiusVariation);
@@ -107,7 +417,7 @@ public class FactionMemberController : MonoBehaviour
         currentOrbitAngle = Random.Range(0f, 360f);
         
         // 初始化随机移动
-        randomCenterPos = transform.position; // 以当前位置为随机移动中心
+        randomCenterPos = transform.position;
         currentRandomSpeed = randomMoveSpeed + Random.Range(-randomSpeedVariation, randomSpeedVariation);
         SetNewRandomTarget();
         
@@ -116,10 +426,49 @@ public class FactionMemberController : MonoBehaviour
         {
             isInMixedMode = true;
             modeSwitchTimer = modeSwitchInterval;
-            // 随机选择初始子模式
             SwitchToSubMode(Random.Range(0, 2) == 0 ? MovementMode.Orbit : MovementMode.Random);
         }
     }
+    
+    private void RecordOriginalRange()
+    {
+        // 根据当前模式记录原始范围
+        if (currentMode == MovementMode.Orbit)
+        {
+            originalRangeCenter = orbitCenterPos;
+            originalRangeRadius = orbitRadius;
+        }
+        else if (currentMode == MovementMode.Random || currentMode == MovementMode.Mixed)
+        {
+            originalRangeCenter = randomCenterPos;
+            originalRangeRadius = randomMoveRadius;
+        }
+    }
+    
+    private void CheckReturnToRange()
+    {
+        // 如果不是返回模式，检查是否需要返回
+        if (currentMode != MovementMode.Returning)
+        {
+            returnCheckTimer -= Time.deltaTime;
+            
+            if (returnCheckTimer <= 0f)
+            {
+                // 检查是否离开原始范围过远
+                float distanceFromCenter = Vector2.Distance(transform.position, originalRangeCenter);
+                
+                if (distanceFromCenter > originalRangeRadius * outOfRangeDistance)
+                {
+                    // 离开范围过远，开始返回
+                    StartReturnToRange();
+                }
+                
+                // 重置检查计时器
+                returnCheckTimer = returnCheckInterval;
+            }
+        }
+    }
+    
     
     private void UpdateModeSwitching()
     {
@@ -129,70 +478,47 @@ public class FactionMemberController : MonoBehaviour
         
         if (modeSwitchTimer <= 0f)
         {
-            // 切换子模式
             MovementMode newSubMode = (currentMode == MovementMode.Orbit) ? 
                 MovementMode.Random : MovementMode.Orbit;
             
             SwitchToSubMode(newSubMode);
-            
-            // 重置计时器（可以添加随机变化）
             modeSwitchTimer = modeSwitchInterval + Random.Range(-2f, 2f);
         }
     }
     
     private void SwitchToSubMode(MovementMode newMode)
     {
-        // 注意：这里不改变currentMode（主模式），而是改变内部状态
-        // 对于混合模式，我们通过这个函数切换子模式
-        
         if (newMode == MovementMode.Orbit)
         {
-            // 切换到轨道模式
             if (orbitCenter != null)
-            {
                 orbitCenterPos = orbitCenter.position;
-            }
             
-            // 计算当前位置相对于中心的初始角度
             Vector2 toObject = (Vector2)transform.position - orbitCenterPos;
             currentOrbitAngle = Mathf.Atan2(toObject.y, toObject.x) * Mathf.Rad2Deg;
-            
-            // 设置轨道半径（保持随机性）
             currentOrbitRadius = orbitRadius + Random.Range(-radiusVariation, radiusVariation);
         }
         else if (newMode == MovementMode.Random)
         {
-            // 切换到随机移动模式
-            randomCenterPos = transform.position; // 以当前位置为随机移动中心
+            randomCenterPos = transform.position;
             SetNewRandomTarget();
         }
-        
-        // 更新内部状态（这里用currentMode来存储当前的子模式）
-        // 注意：在混合模式下，我们实际上是在两个子模式间切换
-        // 为了简化，我们在混合模式下直接修改currentMode来切换子模式
-        // 但在退出混合模式时，需要恢复到原始模式
         
         Debug.Log($"{gameObject.name} 切换到 {newMode} 子模式");
     }
     
     private void UpdateOrbitMovement()
     {
-        // 更新角度
         float direction = clockwise ? -1f : 1f;
         currentOrbitAngle += direction * currentOrbitSpeed * Time.deltaTime;
         currentOrbitAngle %= 360f;
         
-        // 计算新位置
         float angleRad = currentOrbitAngle * Mathf.Deg2Rad;
         Vector2 newPosition = orbitCenterPos + new Vector2(
             Mathf.Cos(angleRad) * currentOrbitRadius,
             Mathf.Sin(angleRad) * currentOrbitRadius
         );
         
-        // 应用位置
         transform.position = newPosition;
-        
-        // 更新朝向
         UpdateRotationForOrbit(direction, angleRad);
     }
     
@@ -200,13 +526,11 @@ public class FactionMemberController : MonoBehaviour
     {
         if (faceMovementDirection && spriteRenderer != null)
         {
-            // 计算切线方向（运动方向）
             Vector2 tangentDirection = new Vector2(
                 -Mathf.Sin(angleRad),
                 Mathf.Cos(angleRad)
             ) * direction;
             
-            // 根据切线方向翻转精灵
             spriteRenderer.flipX = tangentDirection.x < 0;
         }
     }
@@ -215,21 +539,18 @@ public class FactionMemberController : MonoBehaviour
     {
         randomMoveTimer -= Time.deltaTime;
         
-        // 到达目标点或时间到，设置新目标
         if (Vector2.Distance(transform.position, randomTargetPosition) < targetReachThreshold || 
             randomMoveTimer <= 0)
         {
             SetNewRandomTarget();
         }
         
-        // 向目标点移动
         transform.position = Vector2.MoveTowards(
             transform.position, 
             randomTargetPosition, 
             currentRandomSpeed * Time.deltaTime
         );
         
-        // 更新朝向
         UpdateRotationForRandomMovement();
     }
     
@@ -247,28 +568,17 @@ public class FactionMemberController : MonoBehaviour
     
     private void UpdateMixedMovement()
     {
-        // 混合模式下，currentMode实际上存储当前的子模式
-        // 所以直接调用对应的更新函数
         if (currentMode == MovementMode.Orbit)
-        {
             UpdateOrbitMovement();
-        }
         else if (currentMode == MovementMode.Random)
-        {
             UpdateRandomMovement();
-        }
     }
     
     private void SetNewRandomTarget()
     {
-        // 在随机移动范围内选择一个新目标点
         Vector2 randomDirection = Random.insideUnitCircle * randomMoveRadius;
         randomTargetPosition = randomCenterPos + randomDirection;
-        
-        // 重置计时器
         randomMoveTimer = randomTargetChangeInterval + Random.Range(-1f, 1f);
-        
-        // 随机调整速度
         currentRandomSpeed = randomMoveSpeed + Random.Range(-randomSpeedVariation, randomSpeedVariation);
     }
     
@@ -276,23 +586,42 @@ public class FactionMemberController : MonoBehaviour
     {
         if (spriteRenderer == null) return;
         
-        // 根据模式改变颜色（可选）
-        if (currentMode == MovementMode.Orbit)
+        // 根据模式改变颜色
+        switch (currentMode)
         {
-            // 轨道模式：蓝色调
-            spriteRenderer.color = Color.Lerp(spriteRenderer.color, orbitColor, Time.deltaTime * 2f);
+            case MovementMode.Orbit:
+                spriteRenderer.color = Color.Lerp(spriteRenderer.color, orbitColor, Time.deltaTime * 2f);
+                break;
+                
+            case MovementMode.Random:
+                spriteRenderer.color = Color.Lerp(spriteRenderer.color, randomColor, Time.deltaTime * 2f);
+                break;
+                
+            case MovementMode.Returning:
+                spriteRenderer.color = Color.Lerp(spriteRenderer.color, returnColor, Time.deltaTime * 5f);
+                break;
+                
+            case MovementMode.Mixed:
+                Color targetColor = (isInMixedMode && currentMode == MovementMode.Orbit) ? 
+                    orbitColor : randomColor;
+                spriteRenderer.color = Color.Lerp(spriteRenderer.color, targetColor, Time.deltaTime * 2f);
+                break;
         }
-        else if (currentMode == MovementMode.Random)
+    }
+    
+    // 闪烁效果协程
+    private System.Collections.IEnumerator FlashEffect(float duration)
+    {
+        Color originalColor = spriteRenderer.color;
+        float flashTime = 0f;
+        int flashCount = 3;
+        
+        for (int i = 0; i < flashCount; i++)
         {
-            // 随机模式：绿色调
-            spriteRenderer.color = Color.Lerp(spriteRenderer.color, randomColor, Time.deltaTime * 2f);
-        }
-        else if (currentMode == MovementMode.Mixed)
-        {
-            // 混合模式：根据当前子模式决定颜色
-            Color targetColor = (isInMixedMode && currentMode == MovementMode.Orbit) ? 
-                orbitColor : randomColor;
-            spriteRenderer.color = Color.Lerp(spriteRenderer.color, targetColor, Time.deltaTime * 2f);
+            spriteRenderer.color = Color.red;
+            yield return new WaitForSeconds(duration / (flashCount * 2));
+            spriteRenderer.color = originalColor;
+            yield return new WaitForSeconds(duration / (flashCount * 2));
         }
     }
     
@@ -301,32 +630,23 @@ public class FactionMemberController : MonoBehaviour
     {
         if (!allowModeSwitching) return;
         
-        // 如果当前是混合模式，退出混合模式
         isInMixedMode = false;
-        
-        // 切换模式
         currentMode = newMode;
         
-        // 初始化新模式
         if (newMode == MovementMode.Orbit)
-        {
             InitializeOrbitMode();
-        }
         else if (newMode == MovementMode.Random)
-        {
             InitializeRandomMode();
-        }
         else if (newMode == MovementMode.Mixed)
-        {
             InitializeMixedMode();
-        }
+        else if (newMode == MovementMode.Returning)
+            StartReturnToRange();
         
         Debug.Log($"{gameObject.name} 切换到 {newMode} 模式");
     }
     
     private void InitializeOrbitMode()
     {
-        // 计算当前位置相对于中心的初始角度
         if (orbitCenter != null)
         {
             orbitCenterPos = orbitCenter.position;
@@ -335,71 +655,96 @@ public class FactionMemberController : MonoBehaviour
         }
         else
         {
-            // 如果没有指定中心，使用当前位置为中心
             orbitCenterPos = transform.position;
             currentOrbitAngle = 0f;
         }
+        
+        // 更新原始范围
+        originalRangeCenter = orbitCenterPos;
+        originalRangeRadius = orbitRadius;
     }
     
     private void InitializeRandomMode()
     {
-        // 设置随机移动中心为当前位置
         randomCenterPos = transform.position;
         SetNewRandomTarget();
+        
+        // 更新原始范围
+        originalRangeCenter = randomCenterPos;
+        originalRangeRadius = randomMoveRadius;
     }
     
     private void InitializeMixedMode()
     {
         isInMixedMode = true;
         modeSwitchTimer = modeSwitchInterval;
-        
-        // 随机选择初始子模式
         SwitchToSubMode(Random.Range(0, 2) == 0 ? MovementMode.Orbit : MovementMode.Random);
+        
+        // 更新原始范围
+        originalRangeCenter = randomCenterPos;
+        originalRangeRadius = randomMoveRadius;
     }
     
-    // 公开方法：设置轨道中心
+    // 强制开始返回原范围（可从外部调用）
+    public void ForceReturnToRange()
+    {
+        StartReturnToRange();
+    }
+    
+    // 设置原始范围中心
+    public void SetOriginalRangeCenter(Vector2 center)
+    {
+        originalRangeCenter = center;
+    }
+    
+    // 设置原始范围半径
+    public void SetOriginalRangeRadius(float radius)
+    {
+        originalRangeRadius = radius;
+    }
+    
+    // 设置轨道中心
     public void SetOrbitCenter(Transform newCenter)
     {
         orbitCenter = newCenter;
         if (orbitCenter != null)
         {
             orbitCenterPos = orbitCenter.position;
+            originalRangeCenter = orbitCenterPos;
         }
     }
     
-    // 公开方法：获取当前模式
+    // 获取当前模式
     public MovementMode GetCurrentMode()
     {
         return currentMode;
     }
     
-    // 公开方法：在轨道模式和随机模式之间切换
+    // 在轨道模式和随机模式之间切换
     public void ToggleMovementMode()
     {
         if (currentMode == MovementMode.Orbit)
-        {
             SwitchMovementMode(MovementMode.Random);
-        }
         else if (currentMode == MovementMode.Random)
-        {
             SwitchMovementMode(MovementMode.Orbit);
-        }
         else if (currentMode == MovementMode.Mixed)
         {
-            // 混合模式下切换子模式
             MovementMode newSubMode = (currentMode == MovementMode.Orbit) ? 
                 MovementMode.Random : MovementMode.Orbit;
             SwitchToSubMode(newSubMode);
         }
     }
     
-    // 公开方法：设置随机移动范围
+    // 设置随机移动范围
     public void SetRandomMoveRange(float newRadius, Vector2 newCenter)
     {
         randomMoveRadius = newRadius;
         randomCenterPos = newCenter;
         
-        // 如果当前是随机模式，重新设置目标
+        // 更新原始范围
+        originalRangeCenter = randomCenterPos;
+        originalRangeRadius = randomMoveRadius;
+        
         if (currentMode == MovementMode.Random || 
             (currentMode == MovementMode.Mixed && isInMixedMode && currentMode == MovementMode.Random))
         {
@@ -407,14 +752,16 @@ public class FactionMemberController : MonoBehaviour
         }
     }
     
-    // 公开方法：设置轨道参数
+    // 设置轨道参数
     public void SetOrbitParameters(float radius, float speed, bool isClockwise = true)
     {
         orbitRadius = radius;
         orbitSpeed = speed;
         clockwise = isClockwise;
         
-        // 重新计算当前半径和速度（保持随机变化）
+        // 更新原始范围
+        originalRangeRadius = orbitRadius;
+        
         currentOrbitRadius = orbitRadius + Random.Range(-radiusVariation, radiusVariation);
         currentOrbitSpeed = orbitSpeed + Random.Range(-speedVariation, speedVariation);
     }
@@ -422,6 +769,14 @@ public class FactionMemberController : MonoBehaviour
     private void OnDrawGizmosSelected()
     {
         if (!Application.isPlaying) return;
+        
+        // 绘制原始范围
+        Gizmos.color = new Color(1f, 0.5f, 0f, 0.3f); // 半透明橙色
+        Gizmos.DrawWireSphere(originalRangeCenter, originalRangeRadius);
+        
+        // 绘制离开范围阈值
+        Gizmos.color = new Color(1f, 0f, 0f, 0.2f); // 半透明红色
+        Gizmos.DrawWireSphere(originalRangeCenter, originalRangeRadius * outOfRangeDistance);
         
         // 根据模式绘制不同的Gizmo
         switch (currentMode)
@@ -434,8 +789,11 @@ public class FactionMemberController : MonoBehaviour
                 DrawRandomGizmos();
                 break;
                 
+            case MovementMode.Returning:
+                DrawReturnGizmos();
+                break;
+                
             case MovementMode.Mixed:
-                // 混合模式下根据当前子模式绘制
                 if (isInMixedMode)
                 {
                     if (currentMode == MovementMode.Orbit)
@@ -449,15 +807,12 @@ public class FactionMemberController : MonoBehaviour
     
     private void DrawOrbitGizmos()
     {
-        // 绘制轨道
         Gizmos.color = Color.blue;
         Gizmos.DrawWireSphere(orbitCenterPos, currentOrbitRadius);
         
-        // 绘制中心到物体的线
         Gizmos.color = Color.cyan;
         Gizmos.DrawLine(orbitCenterPos, transform.position);
         
-        // 绘制移动方向指示器
         Gizmos.color = Color.yellow;
         float angleRad = currentOrbitAngle * Mathf.Deg2Rad;
         Vector2 tangentDirection = new Vector2(
@@ -469,24 +824,39 @@ public class FactionMemberController : MonoBehaviour
     
     private void DrawRandomGizmos()
     {
-        // 绘制随机移动范围
-        Gizmos.color = new Color(0f, 1f, 0f, 0.2f); // 半透明绿色
+        Gizmos.color = new Color(0f, 1f, 0f, 0.2f);
         Gizmos.DrawWireSphere(randomCenterPos, randomMoveRadius);
         
-        // 绘制当前目标点
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(randomTargetPosition, 0.2f);
         
-        // 绘制到目标点的线
         Gizmos.color = Color.green;
         Gizmos.DrawLine(transform.position, randomTargetPosition);
         
-        // 绘制移动方向
         if (faceMovementDirection)
         {
             Vector2 direction = (randomTargetPosition - (Vector2)transform.position).normalized;
             Gizmos.color = Color.yellow;
             Gizmos.DrawRay(transform.position, direction * 0.5f);
         }
+    }
+    
+    private void DrawReturnGizmos()
+    {
+        // 绘制返回目标点
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(returnTarget, 0.3f);
+        
+        // 绘制返回路径
+        Gizmos.color = new Color(1f, 1f, 0f, 0.5f);
+        Gizmos.DrawLine(transform.position, returnTarget);
+        
+        // 绘制返回方向箭头
+        Vector2 direction = (returnTarget - (Vector2)transform.position).normalized;
+        Gizmos.DrawRay(transform.position, direction * 0.8f);
+        
+        // 绘制返回状态指示器
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, 0.5f);
     }
 }
