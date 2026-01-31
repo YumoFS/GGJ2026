@@ -2,6 +2,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 
+
 public class HunterController : MonoBehaviour
 {
     [Header("追捕设置")]
@@ -15,7 +16,7 @@ public class HunterController : MonoBehaviour
     [Header("速度增长系统")]
     [SerializeField] private bool enableSpeedGrowth = true;
     [SerializeField] private float speedGrowthRate = 0.05f;
-    [SerializeField] private float maxMoveSpeed = 10f;
+    [SerializeField] private float maxMoveSpeed = (float)(0.85 + 0.15 * System.Math.Log(7.0/3.0 , 1.0 + 2.0 / 45.0 * 140));
     [SerializeField] private float accelerationMultiplier = 1.2f;
     [SerializeField] private float growthStartDelay = 30f;
     
@@ -153,8 +154,8 @@ public class HunterController : MonoBehaviour
         if (!enableSpeedGrowth || !growthStarted) return;
         
         // 根据时间线性增长速度
-        float speedIncrease = speedGrowthRate * Time.deltaTime;
-        currentMoveSpeed = Mathf.Min(currentMoveSpeed + speedIncrease, maxMoveSpeed);
+        float speed = (float)(0.85 + 0.15 * System.Math.Log(7.0/3.0 , 1.0 + 2.0 / 45.0 * Time.deltaTime));
+        currentMoveSpeed = Mathf.Min(speed, maxMoveSpeed);
     }
     
     private void UpdateBehaviorBasedOnPlayerZone()
