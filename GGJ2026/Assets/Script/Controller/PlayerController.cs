@@ -116,7 +116,7 @@ public class PlayerController : MonoBehaviour
             spriteRenderer.flipX = moveInput.x < 0;
         }
     }
-    
+
     // 新添加的方法：限制玩家位置在指定范围内
     private void LateUpdate()
     {
@@ -215,6 +215,11 @@ public class PlayerController : MonoBehaviour
                 currentZone.faction == GameManager.Faction.FactionA ? 
                 GameManager.Faction.FactionA : GameManager.Faction.FactionB,
                 progressAmount);
+        }
+        else
+        {
+            float progressAmount = zoneProgressSpeed * Time.fixedDeltaTime;
+            GameManager.Instance.AddFactionProgress(GameManager.Faction.Neutral, progressAmount);
         }
     }
     

@@ -48,7 +48,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   faction: 2
   zoneColor: {r: 1, g: 0, b: 0, a: 1}
-  zoneVisual: {fileID: 5595756676293148201}
+  zoneVisual: {fileID: 0}
   pulseSpeed: 1
   pulseIntensity: 0.2
 --- !u!61 &4491536828769705374
@@ -170,7 +170,7 @@ SpriteRenderer:
   m_SortingLayer: -1
   m_SortingOrder: 0
   m_Sprite: {fileID: 7482667652216324306, guid: 88614c5f75d27f04c96ac135c9f39b71, type: 3}
-  m_Color: {r: 1, g: 0.3, b: 0.2, a: 0.29803923}
+  m_Color: {r: 1, g: 0.3, b: 0.2, a: 0}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0

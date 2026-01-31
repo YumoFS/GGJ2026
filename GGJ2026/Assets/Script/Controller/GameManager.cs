@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using TMPro;
 
 public class GameManager : MonoBehaviour
 {
@@ -19,7 +20,7 @@ public class GameManager : MonoBehaviour
     public Image maskProgressFillA;
     public Image maskProgressFillB;
     public GameObject gameOverPanel;
-    public Text gameOverText;
+    public TextMeshProUGUI gameOverText;
     
     [Header("进度设置")]
     [SerializeField] private float maxMaskProgress = 100f;
@@ -111,7 +112,7 @@ public class GameManager : MonoBehaviour
     {
         isGameOver = true;
         currentState = GameState.GameOver;
-        // gameOverText.text = reason;
+        gameOverText.text = reason;
         Debug.Log("Game Over");
         gameOverPanel.SetActive(true);
         
