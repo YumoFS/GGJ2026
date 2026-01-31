@@ -66,8 +66,8 @@ public class HunterController : MonoBehaviour
         currentMoveSpeed = baseMoveSpeed;
         
         // 根据阵营设置颜色
-        hunterSprite.color = faction == GameManager.Faction.FactionA ? 
-            factionAColor : factionBColor;
+        // hunterSprite.color = faction == GameManager.Faction.FactionA ? 
+            // factionAColor : factionBColor;
 
         indicatorSystem = FindObjectOfType<HunterIndicatorSystem>();
         
@@ -153,8 +153,8 @@ public class HunterController : MonoBehaviour
         if (!enableSpeedGrowth || !growthStarted) return;
         
         // 根据时间线性增长速度
-        float speedIncrease = speedGrowthRate * Time.deltaTime;
-        currentMoveSpeed = Mathf.Min(currentMoveSpeed + speedIncrease, maxMoveSpeed);
+        float speed = (float)(4.25 + 0.75 * System.Math.Log(1.0 + 2.0 / 45.0 * gameTime, 7.0/3.0));
+        currentMoveSpeed = Mathf.Min(speed, maxMoveSpeed);
     }
     
     private void UpdateBehaviorBasedOnPlayerZone()
