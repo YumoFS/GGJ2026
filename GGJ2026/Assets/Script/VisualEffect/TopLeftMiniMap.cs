@@ -326,10 +326,10 @@ public class TopLeftMiniMap : MonoBehaviour
             if (hunters[i] == null || hunterMarkers[i] == null) continue;
             
             // 检查是否显示（只显示与玩家不同阵营的追捕者）
-            bool shouldShow = ShouldShowHunter(hunters[i]);
-            hunterMarkers[i].gameObject.SetActive(shouldShow);
+            // bool shouldShow = ShouldShowHunter(hunters[i]);
+            hunterMarkers[i].gameObject.SetActive(true);
             
-            if (!shouldShow) continue;
+            // if (!shouldShow) continue;
             
             // 更新位置
             Vector2 mapPos = WorldToMiniMapPosition(hunters[i].transform.position);
@@ -359,11 +359,10 @@ public class TopLeftMiniMap : MonoBehaviour
         // 转换为小地图UI坐标（左上角锚点）
         RectTransform mapRT = miniMapDisplay.GetComponent<RectTransform>();
         
-        // 视口坐标的y需要翻转（因为UI的y轴从上到下，而视口坐标的y从下到上）
         float x = viewportPos.x * mapRT.rect.width;
-        float y = (1 - viewportPos.y) * mapRT.rect.height;
+        float y = viewportPos.y * mapRT.rect.height;
         
-        return new Vector2(x, y);
+        return new Vector2(x, Screen.height - y);
     }
     
     private void UpdateMarkerRotation(RectTransform marker, Transform target)
