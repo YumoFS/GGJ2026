@@ -163,7 +163,7 @@ MonoBehaviour:
   spriteRenderer: {fileID: 7700364612948227243}
   faceMovementDirection: 0
   orbitColor: {r: 0.51886785, g: 0.51886785, b: 1, a: 1}
-  randomColor: {r: 0, g: 1, b: 0, a: 1}
+  randomColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!70 &7330610612530221656
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
