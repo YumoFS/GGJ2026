@@ -34,6 +34,7 @@ public class HunterController : MonoBehaviour
     private float currentMoveSpeed;
     private float gameTime = 0f;
     private bool growthStarted = false;
+    private HunterIndicatorSystem indicatorSystem;
     
     private Transform player;
     private Vector2 wanderCenter;
@@ -67,6 +68,17 @@ public class HunterController : MonoBehaviour
         // 根据阵营设置颜色
         hunterSprite.color = faction == GameManager.Faction.FactionA ? 
             factionAColor : factionBColor;
+
+        indicatorSystem = FindObjectOfType<HunterIndicatorSystem>();
+        
+        if (indicatorSystem != null)
+        {
+            indicatorSystem.RegisterHunter(transform);
+        }
+        else
+        {
+            Debug.LogWarning("HunterIndicatorSystem not found in scene!");
+        }
     }
     
     private void Update()
@@ -109,6 +121,30 @@ public class HunterController : MonoBehaviour
             case State.Attacking:
                 // 攻击逻辑（如动画播放等）
                 break;
+        }
+    }
+    
+    void OnDestroy()
+    {
+        if (indicatorSystem != null)
+        {
+            indicatorSystem.UnregisterHunter(transform);
+        }
+    }
+    
+    void OnEnable()
+    {
+        if (indicatorSystem != null)
+        {
+            indicatorSystem.RegisterHunter(transform);
+        }
+    }
+    
+    void OnDisable()
+    {
+        if (indicatorSystem != null)
+        {
+            indicatorSystem.UnregisterHunter(transform);
         }
     }
     
