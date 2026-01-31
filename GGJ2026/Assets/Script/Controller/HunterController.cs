@@ -5,6 +5,7 @@ using System.Collections.Generic;
 
 public class HunterController : MonoBehaviour
 {
+    [SerializeField] private float GameProceedTime = 0f;
     [Header("追捕设置")]
     public GameManager.Faction faction = GameManager.Faction.FactionA;
     [SerializeField] private float baseMoveSpeed = 3f;
@@ -19,6 +20,10 @@ public class HunterController : MonoBehaviour
     [SerializeField] private float maxMoveSpeed = (float)(0.85 + 0.15 * System.Math.Log(7.0/3.0 , 1.0 + 2.0 / 45.0 * 140));
     [SerializeField] private float accelerationMultiplier = 1.2f;
     [SerializeField] private float growthStartDelay = 30f;
+
+    [SerializeField] private float speed = 0f;
+
+    [SerializeField] private float currentMoveSpeed = 0f;
     
     [Header("不同阵营区域行为")]
     [SerializeField] private float enemyZoneMoveSpeedMultiplier = 0.5f; // 敌对阵营区域移动速度倍数
@@ -32,7 +37,7 @@ public class HunterController : MonoBehaviour
     [SerializeField] private ParticleSystem speedEffectParticles;
     
     // 速度相关变量
-    private float currentMoveSpeed;
+
     private float gameTime = 0f;
     private bool growthStarted = false;
     private HunterIndicatorSystem indicatorSystem;
@@ -88,7 +93,7 @@ public class HunterController : MonoBehaviour
         
         // 更新游戏时间
         gameTime += Time.deltaTime;
-        
+        GameProceedTime += Time.deltaTime;
         // 延迟后开始加速
         if (!growthStarted && gameTime >= growthStartDelay)
         {
@@ -154,7 +159,7 @@ public class HunterController : MonoBehaviour
         if (!enableSpeedGrowth || !growthStarted) return;
         
         // 根据时间线性增长速度
-        float speed = (float)(0.85 + 0.15 * System.Math.Log(7.0/3.0 , 1.0 + 2.0 / 45.0 * Time.deltaTime));
+        speed = (float)(4.25 + 0.75 * System.Math.Log(1.0 + 2.0 / 45.0 * GameProceedTime, 7.0/3.0));
         currentMoveSpeed = Mathf.Min(speed, maxMoveSpeed);
     }
     

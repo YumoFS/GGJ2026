@@ -212,6 +212,14 @@ PrefabInstance:
       propertyPath: faction
       value: 2
       objectReference: {fileID: 0}
+    - target: {fileID: 5190185704740651117, guid: c3ccfce9e483f814290e52d4790d23e6, type: 3}
+      propertyPath: maxMoveSpeed
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 5190185704740651117, guid: c3ccfce9e483f814290e52d4790d23e6, type: 3}
+      propertyPath: growthStartDelay
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7961917828756504142, guid: c3ccfce9e483f814290e52d4790d23e6, type: 3}
       propertyPath: m_Name
       value: Enemy (1)
@@ -5375,6 +5383,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 5190185704740651117, guid: c3ccfce9e483f814290e52d4790d23e6, type: 3}
+      propertyPath: growthStartDelay
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7961917828756504142, guid: c3ccfce9e483f814290e52d4790d23e6, type: 3}
       propertyPath: m_Name
       value: Enemy

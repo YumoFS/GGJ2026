@@ -138,7 +138,7 @@ MonoBehaviour:
   wanderInterval: 3
   enableSpeedGrowth: 1
   speedGrowthRate: 0.04
-  maxMoveSpeed: 5
+  maxMoveSpeed: 6
   accelerationMultiplier: 1.2
   growthStartDelay: 10
   enemyZoneMoveSpeedMultiplier: 0.5
