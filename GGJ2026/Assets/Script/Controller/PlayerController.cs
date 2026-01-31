@@ -17,6 +17,11 @@ public class PlayerController : MonoBehaviour
     [Header("面具设置")]
     [SerializeField] private SpriteRenderer maskRenderer;
     [SerializeField] private float maskTransitionSpeed = 2f;
+
+    [Header("可移动范围限制")]
+    [SerializeField] private bool useMovementBounds = true;
+    [SerializeField] private Vector2 minBounds = new Vector2(-10f, -5f);
+    [SerializeField] private Vector2 maxBounds = new Vector2(10f, 5f);
     
     public bool canMove = true;
     private Rigidbody2D rb;
@@ -110,6 +115,53 @@ public class PlayerController : MonoBehaviour
         {
             spriteRenderer.flipX = moveInput.x < 0;
         }
+    }
+    
+    // 新添加的方法：限制玩家位置在指定范围内
+    private void LateUpdate()
+    {
+        if (useMovementBounds)
+        {
+            ClampPlayerPosition();
+        }
+    }
+    
+    // 新添加的方法：限制玩家位置
+    private void ClampPlayerPosition()
+    {
+        if (rb == null) return;
+        
+        // 获取当前玩家位置
+        Vector2 currentPosition = rb.position;
+        
+        // 使用Mathf.Clamp限制位置在minBounds和maxBounds之间
+        currentPosition.x = Mathf.Clamp(currentPosition.x, minBounds.x, maxBounds.x);
+        currentPosition.y = Mathf.Clamp(currentPosition.y, minBounds.y, maxBounds.y);
+        
+        // 应用限制后的位置
+        rb.position = currentPosition;
+    }
+    
+    // 新添加的方法：设置移动边界（可以从其他脚本调用）
+    public void SetMovementBounds(Vector2 min, Vector2 max)
+    {
+        minBounds = min;
+        maxBounds = max;
+        useMovementBounds = true;
+        
+        Debug.Log($"设置移动边界: Min({min.x}, {min.y}) - Max({max.x}, {max.y})");
+    }
+    
+    // 新添加的方法：启用/禁用移动边界
+    public void SetMovementBoundsEnabled(bool enabled)
+    {
+        useMovementBounds = enabled;
+    }
+    
+    // 新添加的方法：获取当前边界
+    public (Vector2 min, Vector2 max) GetCurrentBounds()
+    {
+        return (minBounds, maxBounds);
     }
     
     private void CheckFactionZone()
