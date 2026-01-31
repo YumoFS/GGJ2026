@@ -95,7 +95,7 @@ public class GameManager : MonoBehaviour
             if (maskProgressB < 0) maskProgressB = 0;
         }
         
-        // UpdateUI();
+        UpdateUI();
     }
     
     // 被追捕者抓住
