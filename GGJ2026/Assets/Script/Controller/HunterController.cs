@@ -30,6 +30,9 @@ public class HunterController : MonoBehaviour
     [SerializeField] private Color factionBColor = new Color(1f, 0.3f, 0.2f);
     [SerializeField] private GameObject detectionVisual;
     [SerializeField] private ParticleSystem speedEffectParticles;
+
+    [Header("音频设置")]
+    // [SerializeField] private AudioClip hunterWalkAudio;
     
     // 速度相关变量
     private float currentMoveSpeed;
