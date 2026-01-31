@@ -183,7 +183,7 @@ GameObject:
   - component: {fileID: 827525465986684564}
   - component: {fileID: 8131417232076231544}
   - component: {fileID: 4470628423291020490}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: PlayerVisual
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -373,7 +373,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   duration: 1
-  startVisible: 1
+  startVisible: 0
+  maskFaction: 1
+  manageMultipleMasks: 1
+  otherMasks:
+  - {fileID: 6074038509748971902}
 --- !u!114 &1128160109268571755
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -488,6 +492,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   duration: 1
   startVisible: 0
+  maskFaction: 2
+  manageMultipleMasks: 1
+  otherMasks:
+  - {fileID: 1789479603211528639}
 --- !u!114 &3284915362134503591
 MonoBehaviour:
   m_ObjectHideFlags: 0
