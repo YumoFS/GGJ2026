@@ -276,7 +276,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 123630945}
-  - component: {fileID: 123630944}
   m_Layer: 0
   m_Name: TopLeftMiniMapSystem
   m_TagString: Untagged
@@ -284,32 +283,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &123630944
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 123630943}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ec75d1614e777114bbde7ba95800dbd1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  miniMapCamera: {fileID: 461818053}
-  miniMapDisplay: {fileID: 1833148385}
-  player: {fileID: 1806871185}
-  miniMapSize: {x: 200, y: 200}
-  cameraSize: 15
-  backgroundColor: {r: 0.1, g: 0.1, b: 0.2, a: 0.8}
-  playerMarker: {fileID: 1871101159}
-  playerColor: {r: 0, g: 0, b: 1, a: 1}
-  hunterMarkerPrefab: {fileID: 2529864632624562357, guid: 3fe7a1e6ae758964fbe4669ace113e90, type: 3}
-  markersParent: {fileID: 719960533}
-  hunterAColor: {r: 0.2, g: 0.6, b: 1, a: 1}
-  hunterBColor: {r: 1, g: 0.3, b: 0.2, a: 1}
-  mapMinBounds: {x: -50, y: -50}
-  mapMaxBounds: {x: 50, y: 50}
 --- !u!4 &123630945
 Transform:
   m_ObjectHideFlags: 0
@@ -322,9 +295,7 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 461818055}
-  - {fileID: 719960533}
+  m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &157740201
@@ -483,14 +454,13 @@ GameObject:
   m_Component:
   - component: {fileID: 461818055}
   - component: {fileID: 461818053}
-  - component: {fileID: 461818054}
   m_Layer: 0
   m_Name: Camera
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!20 &461818053
 Camera:
   m_ObjectHideFlags: 0
@@ -526,13 +496,13 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 15
+  orthographic size: 45
   m_Depth: 1
   m_CullingMask:
     serializedVersion: 2
     m_Bits: 256
   m_RenderingPath: -1
-  m_TargetTexture: {fileID: 0}
+  m_TargetTexture: {fileID: 8400000, guid: 8cffab12998a77d4f8fcea0910a16b8b, type: 2}
   m_TargetDisplay: 0
   m_TargetEye: 3
   m_HDR: 1
@@ -542,14 +512,6 @@ Camera:
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
---- !u!81 &461818054
-AudioListener:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 461818052}
-  m_Enabled: 1
 --- !u!4 &461818055
 Transform:
   m_ObjectHideFlags: 0
@@ -558,12 +520,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 461818052}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 123630945}
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &719960532
 GameObject:
@@ -583,7 +545,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &719960533
 RectTransform:
   m_ObjectHideFlags: 0
@@ -598,7 +560,7 @@ RectTransform:
   m_Children:
   - {fileID: 1833148383}
   - {fileID: 1871101159}
-  m_Father: {fileID: 123630945}
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
@@ -971,8 +933,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 10, y: -10}
-  m_SizeDelta: {x: 200, y: 1000}
+  m_AnchoredPosition: {x: 25, y: -25}
+  m_SizeDelta: {x: 200, y: 200}
   m_Pivot: {x: 0, y: 1}
 --- !u!222 &1833148384
 CanvasRenderer:
@@ -1002,7 +964,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Texture: {fileID: 0}
+  m_Texture: {fileID: 8400000, guid: 8cffab12998a77d4f8fcea0910a16b8b, type: 2}
   m_UVRect:
     serializedVersion: 2
     x: 0
@@ -1044,7 +1006,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 20, y: 20}
+  m_SizeDelta: {x: 10, y: 10}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1871101160
 MonoBehaviour:
@@ -1556,6 +1518,18 @@ PrefabInstance:
       propertyPath: orbitCenter
       value: 
       objectReference: {fileID: 1495877313}
+    - target: {fileID: 7831663613192901595, guid: 822319811ab023a49aadcc50323363e6, type: 3}
+      propertyPath: randomColor.b
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7831663613192901595, guid: 822319811ab023a49aadcc50323363e6, type: 3}
+      propertyPath: randomColor.g
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7831663613192901595, guid: 822319811ab023a49aadcc50323363e6, type: 3}
+      propertyPath: randomColor.r
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1579,4 +1553,6 @@ SceneRoots:
   - {fileID: 1495877313}
   - {fileID: 67432130}
   - {fileID: 119629448}
+  - {fileID: 719960533}
+  - {fileID: 461818055}
   - {fileID: 123630945}
