@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
@@ -26,11 +27,12 @@ public class AudioManager : MonoBehaviour
     
     private AudioSource audioSource;
     private AudioSource stepSource;
-    private AudioSource chorusSouece;
+    private AudioSource chorusSource;
     private bool isStage1 = true;
-    private Coroutine switchCoroutine;
+    private Coroutine chorusCoroutine;
     private Coroutine footstepCoroutine;
     private bool wasWalking = false; // 记录上一帧是否在行走
+    private GameManager.Faction lastFaction;
 
     void Start()
     {
@@ -44,6 +46,12 @@ public class AudioManager : MonoBehaviour
         stepSource.clip = footPrint;
         stepSource.volume = 0.5f;
         stepSource.loop = true;
+
+        chorusSource = gameObject.AddComponent<AudioSource>();
+        chorusSource.volume = 1f;
+        chorusSource.loop = false;
+
+        lastFaction = GameManager.Instance.playerCurrentFaction;
         
         // 开始播放第一阶段音频
         audioSource.Play();
@@ -62,6 +70,8 @@ public class AudioManager : MonoBehaviour
         }
         
         bool isWalkingNow = PlayerController.Instance.isWalking;
+        GameManager.Faction playerCurrentFaction = GameManager.Instance.playerCurrentFaction;
+
         
         // 状态改变时处理
         if (isWalkingNow != wasWalking)
@@ -88,6 +98,40 @@ public class AudioManager : MonoBehaviour
             
             wasWalking = isWalkingNow;
         }
+
+        if (playerCurrentFaction != lastFaction)
+        {
+            if (playerCurrentFaction == GameManager.Faction.FactionA)
+            {
+                if (chorusCoroutine != null)
+                {
+                    StopCoroutine(chorusCoroutine);
+                }
+                chorusCoroutine = StartCoroutine(PlayChorusSounds("female"));
+            }
+            else if (playerCurrentFaction == GameManager.Faction.FactionB)
+            {
+                if (chorusCoroutine != null)
+                {
+                    StopCoroutine(chorusCoroutine);
+                }
+                chorusCoroutine = StartCoroutine(PlayChorusSounds("male"));
+            }
+            else
+            {
+                float volumeTimer = 0f;
+                float volumeDuration = 0.8f;
+                while(volumeTimer < volumeDuration)
+                {
+                    volumeTimer += Time.deltaTime;
+                    float t = Mathf.Clamp01(volumeTimer / volumeDuration);
+                    chorusSource.volume = Mathf.Lerp(1f, 0, t);
+                }
+                StopCoroutine(chorusCoroutine);
+            }
+
+            lastFaction = playerCurrentFaction;
+        }
     }
 
     // 播放脚步声的协程
@@ -103,6 +147,22 @@ public class AudioManager : MonoBehaviour
             yield return new WaitForSeconds(footstepInterval);  
         }
     }
+
+    IEnumerator PlayChorusSounds(string chorusType)
+    {
+        if (chorusType == "male") chorusSource.clip = maleChorus;
+        else if (chorusType == "female") chorusSource.clip = femaleChorus;
+
+        chorusSource.volume = 1f;
+
+        while (true)
+        {
+            chorusSource.Play();
+             
+            yield return new WaitForSeconds(15f);
+        }
+    }
+
     IEnumerator TimerCoroutine()
     {
         while (timer < stage1Duration)

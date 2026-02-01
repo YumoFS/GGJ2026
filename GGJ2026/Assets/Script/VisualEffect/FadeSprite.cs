@@ -97,6 +97,8 @@ public class FadeSpriteToggleWithStart : MonoBehaviour
         Vector3 endScale = enableAreaScaleEffect ? 
             (visible ? targetScale : initialScale) : 
             startScale;
+
+        // Debug.Log($"{startAlpha}, {targetAlpha}, {startScale}, {targetScale}");
         
         while (timer < duration)
         {
@@ -108,7 +110,7 @@ public class FadeSpriteToggleWithStart : MonoBehaviour
             sr.color = c;
             
             // 如果启用了缩放效果，同时渐变缩放
-            if (enableAreaScaleEffect)
+            if (enableAreaScaleEffect /*&& endScale == targetScale*/)
             {
                 transform.localScale = Vector3.Lerp(startScale, endScale, t);
             }
