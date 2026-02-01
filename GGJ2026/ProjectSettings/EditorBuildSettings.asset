@@ -5,21 +5,36 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/Startmenu.unity
+    guid: 6b4bb075907c3734c97a57fc677698c2
   - enabled: 0
     path: Assets/Scenes/SampleScene.unity
-    guid: 2cda990e2423bbf4892e6590ba056729
-  - enabled: 1
+    guid: 8c9cfa26abfee488c85f1582747f6a02
+  - enabled: 0
     path: Assets/Scenes/map.unity
     guid: 4485f2d26cf7e214a9807eecdc96b389
   - enabled: 1
     path: Assets/Scenes/map.unity
-    guid: 8cc4c93ecbff31642b85b6d643b5271e
-  - enabled: 1
+    guid: 4485f2d26cf7e214a9807eecdc96b389
+  - enabled: 0
     path: Assets/Scenes/PlayerControllerScene.unity
     guid: 05232a4ea68b40b4099a82627850b79b
   - enabled: 1
-    path: Assets/Scenes/Startmenu.unity
-    guid: 6b4bb075907c3734c97a57fc677698c2
+    path: Assets/Scenes/BackgroundText.unity
+    guid: 0f0f4cfbac39f6d40bd235be248b119d
+  - enabled: 1
+    path: Assets/Scenes/Ending1.unity
+    guid: 06844db84a9beb349ac42cb491688204
+  - enabled: 1
+    path: Assets/Scenes/Ending2.unity
+    guid: d9585dd40b5a48948af98d9bfb87f426
+  - enabled: 1
+    path: Assets/Scenes/Ending3.unity
+    guid: e16f459536a557c489af55e91d946d1b
+  - enabled: 1
+    path: Assets/Scenes/Settings.unity
+    guid: 225548f64fd128e479d1a0711822ecf5
   m_configObjects:
     com.unity.addressableassets: {fileID: 11400000, guid: bcbc17ee045f5f24abab6c5be7bb16fe, type: 2}
     com.unity.localization.settings: {fileID: 11400000, guid: d67b4e422b91cae4890b91756fb634f4, type: 2}

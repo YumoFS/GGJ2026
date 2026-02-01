@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -115,6 +116,19 @@ public class GameManager : MonoBehaviour
         gameOverText.text = reason;
         Debug.Log("Game Over");
         gameOverPanel.SetActive(true);
+
+        if (reason == $"被{Faction.FactionA}完全同化！")
+        {
+            SceneManager.LoadScene("Ending1");
+        }
+        else if (reason == $"被{Faction.FactionB}完全同化！")
+        {
+            SceneManager.LoadScene("Ending2");
+        }
+        else
+        {
+            SceneManager.LoadScene("Ending3");
+        }
         
         // 停止玩家输入
         if (player != null)
