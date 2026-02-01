@@ -51,7 +51,7 @@ public class IntroSequenceController : MonoBehaviour
 
     void Update()
     {
-        if (/*canEnter &&*/ Input.anyKeyDown)
+        if (canEnter && Input.anyKeyDown)
         {
             SceneManager.LoadScene(nextSceneName);
         }

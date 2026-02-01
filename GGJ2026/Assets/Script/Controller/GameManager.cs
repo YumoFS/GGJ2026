@@ -3,6 +3,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 using TMPro;
+using UnityEngine.SceneManagement;
+using System;
 
 public class GameManager : MonoBehaviour
 {
@@ -26,6 +28,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private float maxMaskProgress = 100f;
     public float maskProgressA = 0f;
     public float maskProgressB = 0f;
+    public float biggerValue = 0f;
     
     private PlayerController player;
     
@@ -61,7 +64,12 @@ public class GameManager : MonoBehaviour
         player = FindObjectOfType<PlayerController>();
         // UpdateUI();
     }
-    
+
+    private void Update()
+    {
+        biggerValue = Math.Max(maskProgressA, maskProgressB);
+    }
+
     // 增加阵营进度
     public void AddFactionProgress(Faction faction, float amount)
     {
@@ -115,6 +123,19 @@ public class GameManager : MonoBehaviour
         gameOverText.text = reason;
         Debug.Log("Game Over");
         gameOverPanel.SetActive(true);
+
+        if (reason == $"被{Faction.FactionA}完全同化！")
+        {
+            SceneManager.LoadScene("Ending1");
+        }
+        else if (reason == $"被{Faction.FactionB}完全同化！")
+        {
+            SceneManager.LoadScene("Ending2");
+        }
+        else
+        {
+            SceneManager.LoadScene("Ending3");
+        }
         
         // 停止玩家输入
         if (player != null)
