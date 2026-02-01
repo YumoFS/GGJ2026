@@ -4,6 +4,7 @@ using UnityEngine.UI;
 using System.Collections;
 using TMPro;
 using UnityEngine.SceneManagement;
+using System;
 
 public class GameManager : MonoBehaviour
 {
@@ -27,6 +28,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private float maxMaskProgress = 100f;
     public float maskProgressA = 0f;
     public float maskProgressB = 0f;
+    public float biggerValue = 0f;
     
     private PlayerController player;
     
@@ -62,7 +64,12 @@ public class GameManager : MonoBehaviour
         player = FindObjectOfType<PlayerController>();
         // UpdateUI();
     }
-    
+
+    private void Update()
+    {
+        biggerValue = Math.Max(maskProgressA, maskProgressB);
+    }
+
     // 增加阵营进度
     public void AddFactionProgress(Faction faction, float amount)
     {
