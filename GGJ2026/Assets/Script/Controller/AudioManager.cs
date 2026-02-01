@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
@@ -19,12 +20,19 @@ public class AudioManager : MonoBehaviour
     [Header("时间设置")]
     public float stage1Duration = 60f;  // 第一段音频播放总时间
     private float timer = 0f;
+
+    [Header("脚步声设置")]
+    [SerializeField] private float footstepVolume = 0.5f;
+    [SerializeField] private float footstepInterval = 0.3f; // 脚步声音播放间隔
     
     private AudioSource audioSource;
     private AudioSource stepSource;
-    private AudioSource chorusSouece;
+    private AudioSource chorusSource;
     private bool isStage1 = true;
-    private Coroutine switchCoroutine;
+    private Coroutine chorusCoroutine;
+    private Coroutine footstepCoroutine;
+    private bool wasWalking = false; // 记录上一帧是否在行走
+    private GameManager.Faction lastFaction;
 
     void Start()
     {
@@ -36,8 +44,14 @@ public class AudioManager : MonoBehaviour
 
         stepSource = gameObject.AddComponent<AudioSource>();
         stepSource.clip = footPrint;
-        stepSource.volume = 0;
+        stepSource.volume = 0.5f;
         stepSource.loop = true;
+
+        chorusSource = gameObject.AddComponent<AudioSource>();
+        chorusSource.volume = 0.5f;
+        chorusSource.loop = false;
+
+        lastFaction = GameManager.Instance.playerCurrentFaction;
         
         // 开始播放第一阶段音频
         audioSource.Play();
@@ -48,13 +62,102 @@ public class AudioManager : MonoBehaviour
 
     private void Update()
     {
-        if (PlayerController.Instance.isWalking)
+        // 确保PlayerController实例存在
+        if (PlayerController.Instance == null)
         {
-            stepSource.volume = 0.5f;
+            stepSource.volume = 0;
+            return;
         }
-        else
+        
+        bool isWalkingNow = PlayerController.Instance.isWalking;
+        GameManager.Faction playerCurrentFaction = GameManager.Instance.playerCurrentFaction;
+
+        
+        // 状态改变时处理
+        if (isWalkingNow != wasWalking)
         {
-            stepSource.volume = 0f;
+            if (isWalkingNow)
+            {
+                // 开始播放脚步声
+                if (footstepCoroutine != null)
+                {
+                    StopCoroutine(footstepCoroutine);
+                }
+                footstepCoroutine = StartCoroutine(PlayFootstepSounds());
+            }
+            else
+            {
+                // 停止播放脚步声
+                if (footstepCoroutine != null)
+                {
+                    StopCoroutine(footstepCoroutine);
+                    footstepCoroutine = null;
+                }
+                stepSource.volume = 0;
+            }
+            
+            wasWalking = isWalkingNow;
+        }
+
+        if (playerCurrentFaction != lastFaction)
+        {
+            if (playerCurrentFaction == GameManager.Faction.FactionA)
+            {
+                if (chorusCoroutine != null)
+                {
+                    StopCoroutine(chorusCoroutine);
+                }
+                chorusCoroutine = StartCoroutine(PlayChorusSounds("female"));
+            }
+            else if (playerCurrentFaction == GameManager.Faction.FactionB)
+            {
+                if (chorusCoroutine != null)
+                {
+                    StopCoroutine(chorusCoroutine);
+                }
+                chorusCoroutine = StartCoroutine(PlayChorusSounds("male"));
+            }
+            else
+            {
+                float volumeTimer = 0f;
+                float volumeDuration = 0.8f;
+                while(volumeTimer < volumeDuration)
+                {
+                    volumeTimer += Time.deltaTime;
+                    float t = Mathf.Clamp01(volumeTimer / volumeDuration);
+                    chorusSource.volume = Mathf.Lerp(0.5f, 0, t);
+                }
+                StopCoroutine(chorusCoroutine);
+            }
+
+            lastFaction = playerCurrentFaction;
+        }
+    }
+
+    // 播放脚步声的协程
+    IEnumerator PlayFootstepSounds()
+    {
+        while (true)
+        {
+            // 播放脚步声
+            stepSource.Play();
+            stepSource.volume = footstepVolume;
+            
+            // 等待间隔时间
+            yield return new WaitForSeconds(footstepInterval);  
+        }
+    }
+
+    IEnumerator PlayChorusSounds(string chorusType)
+    {
+        if (chorusType == "male") {chorusSource.clip = maleChorus;chorusSource.volume = 0.7f;}
+        else if (chorusType == "female") {chorusSource.clip = femaleChorus;chorusSource.volume = 0.5f;}
+        
+        while (true)
+        {
+            chorusSource.Play();
+             
+            yield return new WaitForSeconds(15f);
         }
     }
 

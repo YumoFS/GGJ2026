@@ -17,6 +17,11 @@ public class FadeSpriteToggleWithStart : MonoBehaviour
     [Header("多面具管理")]
     [SerializeField] private bool manageMultipleMasks = false;
     [SerializeField] private FadeSpriteToggleWithStart[] otherMasks; // 其他面具控制器
+    
+    [Header("区域缩放效果")]
+    [SerializeField] private bool enableAreaScaleEffect = false; // 启用进入区域时同时缩放
+    [SerializeField] private Vector3 initialScale = Vector3.one; // 初始缩放值
+    [SerializeField] private Vector3 targetScale = Vector3.zero; // 目标缩放值
 
     void Start()
     {
@@ -26,6 +31,17 @@ public class FadeSpriteToggleWithStart : MonoBehaviour
         Color c = sr.color;
         c.a = startVisible ? 1f : 0f;
         sr.color = c;
+        
+        // 初始化缩放
+        if (enableAreaScaleEffect)
+        {
+            // 根据可见状态设置初始缩放
+            transform.localScale = startVisible ? targetScale : initialScale;
+        }
+        else
+        {
+            transform.localScale = initialScale;
+        }
 
         isVisible = startVisible;
         UpdateMaskVisibility();
@@ -66,15 +82,23 @@ public class FadeSpriteToggleWithStart : MonoBehaviour
         }
         
             // 使用渐变效果
-        fadeCoroutine = StartCoroutine(FadeTo(visible ? 1f : 0f));
+        fadeCoroutine = StartCoroutine(FadeTo(visible));
     }
 
-    private System.Collections.IEnumerator FadeTo(float targetAlpha)
+    private System.Collections.IEnumerator FadeTo(bool visible)
     {
         isFading = true;
         
         float startAlpha = sr.color.a;
+        float targetAlpha = visible ? 1f : 0f;
         float timer = 0f;
+        
+        Vector3 startScale = transform.localScale;
+        Vector3 endScale = enableAreaScaleEffect ? 
+            (visible ? targetScale : initialScale) : 
+            startScale;
+
+        // Debug.Log($"{startAlpha}, {targetAlpha}, {startScale}, {targetScale}");
         
         while (timer < duration)
         {
@@ -85,6 +109,12 @@ public class FadeSpriteToggleWithStart : MonoBehaviour
             c.a = Mathf.Lerp(startAlpha, targetAlpha, t);
             sr.color = c;
             
+            // 如果启用了缩放效果，同时渐变缩放
+            if (enableAreaScaleEffect /*&& endScale == targetScale*/)
+            {
+                transform.localScale = Vector3.Lerp(startScale, endScale, t);
+            }
+            
             yield return null;
         }
         
@@ -92,6 +122,11 @@ public class FadeSpriteToggleWithStart : MonoBehaviour
         Color finalColor = sr.color;
         finalColor.a = targetAlpha;
         sr.color = finalColor;
+        
+        if (enableAreaScaleEffect)
+        {
+            transform.localScale = endScale;
+        }
         
         isFading = false;
     }
