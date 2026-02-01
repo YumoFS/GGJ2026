@@ -24,12 +24,21 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private Vector2 minBounds = new Vector2(-10f, -5f);
     [SerializeField] private Vector2 maxBounds = new Vector2(10f, 5f);
     
+    [Header("行走状态检测")]
+    [SerializeField] private float walkThreshold = 0.1f; // 速度阈值，超过这个值才认为是行走
+    [SerializeField] private float inputDeadzone = 0.1f; // 输入死区
+    
     public bool canMove = true;
     public bool isWalking;
     private Rigidbody2D rb;
     private SpriteRenderer spriteRenderer;
     private Vector2 moveInput;
     private Vector2 currentVelocity;
+
+    // 行走状态相关
+    private float lastWalkTime; // 上次行走的时间
+    [SerializeField] private float walkCooldownTime = 0.1f; // 行走状态冷却时间（防止频繁切换）
+    private bool wasWalking; // 上一帧是否在行走
     
     // 阵营相关
     private FactionZone currentZone = null;
@@ -53,6 +62,8 @@ public class PlayerController : MonoBehaviour
     
     private void Awake()
     {
+        Instance = this;
+
         rb = GetComponent<Rigidbody2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
         playerControls = new PlayerControls();
@@ -75,6 +86,11 @@ public class PlayerController : MonoBehaviour
     private void OnMovePerformed(InputAction.CallbackContext context)
     {
         moveInput = context.ReadValue<Vector2>();
+        // 应用输入死区
+        if (moveInput.magnitude < inputDeadzone)
+        {
+            moveInput = Vector2.zero;
+        }
     }
     
     private void OnMoveCanceled(InputAction.CallbackContext context)
@@ -87,10 +103,12 @@ public class PlayerController : MonoBehaviour
         if (!canMove)
         {
             rb.velocity = Vector2.zero;
+            UpdateWalkingState(false); // 明确设置为非行走状态
             return;
         }
         
         HandleMovement();
+        UpdateWalkingState(); // 更新行走状态
         CheckFactionZone();
         UpdateMaskAppearance();
     }
@@ -103,13 +121,11 @@ public class PlayerController : MonoBehaviour
         {
             currentVelocity = Vector2.Lerp(currentVelocity, targetVelocity, 
                 acceleration * Time.fixedDeltaTime);
-            isWalking = true;
         }
         else
         {
             currentVelocity = Vector2.Lerp(currentVelocity, Vector2.zero, 
                 deceleration * Time.fixedDeltaTime);
-            isWalking = false;
         }
         
         rb.velocity = currentVelocity;
@@ -118,6 +134,39 @@ public class PlayerController : MonoBehaviour
         if (moveInput.x != 0)
         {
             spriteRenderer.flipX = moveInput.x < 0;
+        }
+    }
+
+    private void UpdateWalkingState(bool forceState = false)
+    {
+        if (forceState)
+        {
+            isWalking = false;
+            return;
+        }
+        
+        // 计算当前速度大小
+        float currentSpeed = rb.velocity.magnitude;
+        
+        // 检查是否达到行走阈值
+        bool shouldBeWalking = currentSpeed > walkThreshold;
+        
+        // 防止频繁状态切换（添加冷却时间）
+        if (shouldBeWalking != wasWalking)
+        {
+            if (Time.time - lastWalkTime > walkCooldownTime)
+            {
+                isWalking = shouldBeWalking;
+                lastWalkTime = Time.time;
+                wasWalking = shouldBeWalking;
+                
+                // 可以在这里触发行走状态变化的事件
+                // OnWalkingStateChanged?.Invoke(isWalking);
+            }
+        }
+        else
+        {
+            isWalking = shouldBeWalking;
         }
     }
 
