@@ -201,13 +201,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   autoStartOnEnable: 1
   startDelay: 1
-  scrollSpeed: 120
-  travelDistance: 1500
+  scrollSpeed: 50
+  travelDistance: 2500
   holdDuration: 1
   resetToStartOnReplay: 1
   onScrollComplete:
     m_PersistentCalls:
       m_Calls: []
-  titleSceneName: Title
+  titleSceneName: Startmenu
   sceneTransitionDelay: 3
   objectsToActivateAfterTransition: []

@@ -48,7 +48,7 @@ public class AudioManager : MonoBehaviour
         stepSource.loop = true;
 
         chorusSource = gameObject.AddComponent<AudioSource>();
-        chorusSource.volume = 1f;
+        chorusSource.volume = 0.5f;
         chorusSource.loop = false;
 
         lastFaction = GameManager.Instance.playerCurrentFaction;
@@ -125,7 +125,7 @@ public class AudioManager : MonoBehaviour
                 {
                     volumeTimer += Time.deltaTime;
                     float t = Mathf.Clamp01(volumeTimer / volumeDuration);
-                    chorusSource.volume = Mathf.Lerp(1f, 0, t);
+                    chorusSource.volume = Mathf.Lerp(0.5f, 0, t);
                 }
                 StopCoroutine(chorusCoroutine);
             }
@@ -150,11 +150,9 @@ public class AudioManager : MonoBehaviour
 
     IEnumerator PlayChorusSounds(string chorusType)
     {
-        if (chorusType == "male") chorusSource.clip = maleChorus;
-        else if (chorusType == "female") chorusSource.clip = femaleChorus;
-
-        chorusSource.volume = 1f;
-
+        if (chorusType == "male") {chorusSource.clip = maleChorus;chorusSource.volume = 0.7f;}
+        else if (chorusType == "female") {chorusSource.clip = femaleChorus;chorusSource.volume = 0.5f;}
+        
         while (true)
         {
             chorusSource.Play();

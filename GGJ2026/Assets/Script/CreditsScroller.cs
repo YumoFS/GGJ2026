@@ -154,11 +154,11 @@ public class CreditsScroller : MonoBehaviour
         
         if (SceneTransitionManager.Instance != null)
         {
-            // SceneTransitionManager.Instance.ScheduleTransitionToTitle(
-            //     titleSceneName,
+            SceneTransitionManager.Instance.ScheduleTransitionToTitle(
+                titleSceneName
             //     objectsToActivateAfterTransition,
             //     sceneTransitionDelay
-            // );
+            );
         }
 
         scrollRoutine = null;
